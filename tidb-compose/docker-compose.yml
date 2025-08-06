@@ -1,0 +1,60 @@
+version: '3.8'
+
+services:
+  pd:
+    image: us-docker.pkg.dev/pingcap-testing-account/hub/tikv/pd/image:master-next-gen_linux_amd64
+    container_name: pd
+    ports:
+      - "2379:2379"
+    volumes:
+      - ./config/pd.toml:/pd.toml
+      - ./data/pd:/data/pd
+    command:
+      - --name=pd
+      - --data-dir=/data/pd
+      - --client-urls=http://0.0.0.0:2379
+      - --peer-urls=http://0.0.0.0:2380
+      - --advertise-client-urls=http://pd:2379
+      - --advertise-peer-urls=http://pd:2380
+      - --initial-cluster=pd=http://pd:2380
+      - --config=/pd.toml
+    networks:
+      - tidb-net
+
+  tikv:
+    image: us-docker.pkg.dev/pingcap-testing-account/hub/tikv/tikv/image:release-nextgen-20250815-67eb240-next-gen_linux_amd64
+    container_name: tikv
+    depends_on:
+      - pd
+    volumes:
+      - ./config/tikv.toml:/tikv.toml
+      - ./data/tikv:/data/tikv
+    command:
+      - --pd=pd:2379
+      - --data-dir=/data/tikv
+      - --config=/tikv.toml
+    networks:
+      - tidb-net
+
+  tidb:
+    image: pingcap/tidb:latest
+    container_name: tidb
+    depends_on:
+      - pd
+      - tikv
+    ports:
+      - "4000:4000"
+      - "10080:10080"
+    volumes:
+      - ./config/tidb.toml:/tidb.toml
+      - ./data/tidb:/var/lib/tidb
+    command:
+      - --store=tikv
+      - --path=pd:2379
+      - --config=/tidb.toml
+    networks:
+      - tidb-net
+
+networks:
+  tidb-net:
+    driver: bridge
