@@ -10,8 +10,10 @@ set -e
 ../script/bin/tidb-server -config conf/tidb5.toml > tidb5.log &
 ../script/bin/tidb-server -config conf/tidb6.toml > tidb6.log &
 
+sleep 3
+
 # run test
 go test -v ./...
 
-pkill -f tidb-server
+pkill -9 -f tidb-server
 ../script/stop_cluster.sh

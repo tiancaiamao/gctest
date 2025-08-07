@@ -59,9 +59,9 @@ func TestAll(t *testing.T) {
 		require.Len(t, values, 1)
 		leaderDesc = append(leaderDesc, values[0])
 	}
-	require.Equal(t, "10m0s", leaderDesc[0])
-	require.Equal(t, "17m0s", leaderDesc[1])
-	require.Equal(t, "30m0s", leaderDesc[2])
+	require.NotEqual(t, leaderDesc[0], leaderDesc[1])
+	require.NotEqual(t, leaderDesc[1], leaderDesc[2])
+	require.NotEqual(t, leaderDesc[2], leaderDesc[0])
 
 	// Check they are using different configuration
 	var gcLifeTimes []string
@@ -79,9 +79,9 @@ func TestAll(t *testing.T) {
 		require.Len(t, values, 1)
 		gcLifeTimes = append(gcLifeTimes, values[0])
 	}
-	require.NotEqual(t, gcLifeTimes[0], gcLifeTimes[1])
-	require.NotEqual(t, gcLifeTimes[1], gcLifeTimes[2])
-	require.NotEqual(t, gcLifeTimes[2], gcLifeTimes[0])
+	require.Equal(t, "10m0s", gcLifeTimes[0])
+	require.Equal(t, "17m0s", gcLifeTimes[1])
+	require.Equal(t, "30m0s", gcLifeTimes[2])
 
 	for _, db := range dbs {
 		_, err = db.Exec("create table if not exists test.t (id int primary key, v int);")

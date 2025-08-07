@@ -14,7 +14,7 @@ port = 4005
 store = "tikv"
 
 # TiDB storage path.
-path = "pd:2379"
+path = "127.0.0.1:2379"
 
 # The socket file to use for connection.
 socket = "/tmp/tidb-{Port}.sock"
