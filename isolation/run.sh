@@ -13,7 +13,7 @@ set -e
 sleep 3
 
 # run test
-go test -v ./...
+go test -v -timeout 0 ./...
 
 pkill -9 -f tidb-server
 ../script/stop_cluster.sh

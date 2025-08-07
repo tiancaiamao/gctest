@@ -73,7 +73,7 @@ func TestAll(t *testing.T) {
 			var gcLifeTime, gcInterval string
 			err = rows.Scan(&gcLifeTime, &gcInterval)
 			require.NoError(t, err)
-			values = append(values, gcLifeTime)
+			values = append(values, gcInterval)
 		}
 		rows.Close()
 		require.Len(t, values, 1)
@@ -84,7 +84,10 @@ func TestAll(t *testing.T) {
 	require.Equal(t, "30m0s", gcLifeTimes[2])
 
 	for _, db := range dbs {
-		_, err = db.Exec("create table if not exists test.t (id int primary key, v int);")
+		_, err = db.Exec("drop table if exists test.t;")
+		require.NoError(t, err)
+
+		_, err = db.Exec("create table test.t (id int primary key, v int);")
 		require.NoError(t, err)
 
 		_, err = db.Exec("insert into test.t values (1, 10), (2, 20), (3, 30);")
@@ -96,7 +99,7 @@ func TestAll(t *testing.T) {
 	fmt.Println("check data visibility after 5min")
 
 	for _, db := range dbs {
-		mustQuery(t, db, "select * from test.t").Check(Rows("1 10\n2 20\n3 30"))
+		mustQuery(t, db, "select * from test.t").Check(Rows("1 10", "2 20", "3 30"))
 	}
 
 	// 15min later
@@ -104,7 +107,7 @@ func TestAll(t *testing.T) {
 	fmt.Println("check data visibility after 15min")
 
 	for _, db := range dbs[1:] {
-		mustQuery(t, db, "select * from test.t").Check(Rows("1 10\n2 20\n3 30"))
+		mustQuery(t, db, "select * from test.t").Check(Rows("1 10", "2 20", "3 30"))
 	}
 	_, err = dbs[0].Query("select * from test.t")
 	require.Error(t, err)
@@ -117,7 +120,7 @@ func TestAll(t *testing.T) {
 		_, err = db.Query("select * from test.t")
 		require.Error(t, err)
 	}
-	mustQuery(t, dbs[2], "select * from test.t").Check(Rows("1 10\n2 20\n3 30"))
+	mustQuery(t, dbs[2], "select * from test.t").Check(Rows("1 10", "2 20", "3 30"))
 
 	fmt.Println("test succeed")
 }
@@ -144,6 +147,7 @@ func mustQuery(t *testing.T, db *sql.DB, sql string) *Result {
 	require.NoError(t, rows.Close())
 	return &Result{
 		rows: res,
+		require: require.New(t),
 	}
 }
 
