@@ -33,7 +33,7 @@ done
 echo "TiDB is online!"
 
 # run the test
-go test -V ./...
+go test -v ./...
 
 # cleanup and exit tiup
 echo "Stopping playground..."
