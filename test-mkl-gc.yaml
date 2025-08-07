@@ -1,0 +1,108 @@
+resources:
+  - name: test-mkl-gc
+    properties:
+      disks:
+        - autoDelete: true
+          boot: true
+          deviceName: boot
+          initializeParams:
+            sourceImage: https://www.googleapis.com/compute/v1/projects/rocky-linux-cloud/global/images/rocky-linux-9-optimized-gcp-v20240815
+          type: PERSISTENT
+      machineType: https://www.googleapis.com/compute/v1/projects/gcp-tikv-transaction-dev/zones/us-east4-c/machineTypes/n2-standard-4
+      metadata:
+        items:
+          - key: startup-script
+            value: |
+              function install-commons() {
+                  dnf install -y --setopt=install_weak_deps=false epel-release
+                  dnf install -y --setopt=install_weak_deps=false git tig lnav tmux rsync numactl mysql bash-completion nc docker golang
+              }
+
+              function install-sysbench() {
+                  dnf -y install git make automake libtool pkgconfig libaio-devel openssl-devel
+                  dnf -y install mariadb-connector-c-devel
+
+                  git clone https://github.com/zyguan/sysbench.git /root/sysbench
+                  pushd /root/sysbench
+                  git checkout dev
+                  ./autogen.sh
+                  ./configure
+                  make -j
+                  make install
+                  popd
+              }
+
+              function install-jsonnet() {
+                  gsutil cp gs://oltp-bench-us-east4/tools/go-jsonnet_0.20.0_Linux_x86_64.tar.gz /tmp/jsonnet.tar.gz
+                  tar -xf /tmp/jsonnet.tar.gz -C /usr/local/bin
+              }
+
+              function install-yq() {
+                  gsutil cp gs://oltp-bench-us-east4/tools/yq_linux_amd64.tar.gz /tmp/yq.tar.gz
+                  tar -xf /tmp/yq.tar.gz -C /usr/local/bin ./yq_linux_amd64
+                  mv /usr/local/bin/yq_linux_amd64 /usr/local/bin/yq
+              }
+
+              function mount-disk() {
+                  local disk=${1:-/dev/sdb}
+                  local mount_point=${2:-/data}
+                  mkdir -p $mount_point
+                  mkfs.ext4 -m 0 -E lazy_itable_init=0,lazy_journal_init=0,discard $disk
+                  echo "$(blkid -o export $disk | grep UUID) $mount_point ext4 discard,defaults,noatime 0 2" | tee -a /etc/fstab
+                  systemctl daemon-reload
+                  mount $disk
+              }
+
+              function user-wait-creation() {
+                  while ! test -d /home/transaction/.ssh; do
+                      echo waiting user creation
+                      sleep 5
+                  done
+              }
+
+              function user-install-auth-key() {
+                  sudo -u transaction bash -c 'gcloud secrets versions access latest --secret=transaction-team-auth-key > ~/.ssh/id_rsa; chmod 600 ~/.ssh/id_rsa'
+              }
+
+              function user-install-app-key() {
+                  sudo -u transaction bash -c 'mkdir -p ~/.config/gcloud; gcloud secrets versions access latest --secret=gs-cred-key > ~/.config/gcloud/application_default_credentials.json'
+              }
+
+              function user-install-tiup() {
+                  sudo -u transaction bash -c 'curl --proto "=https" --tlsv1.2 -sSf https://tiup-mirrors.pingcap.com/install.sh | sh'
+              }
+
+              function run-gctest() {
+                  sudo -u transaction bash -c 'git clone https://github.com/tiancaiamao/gctest.git /home/transaction/gctest'
+                  cd /home/transaction/gctest/isolation
+                  source ~/.bash_profile
+                  echo "====[ Debug TiUP ]===="
+                  echo "PATH=$PATH"
+                  echo "Whoami: $(whoami)"
+                  echo "TiUP path: $(which tiup || echo 'tiup not found')"
+                  echo "TiUP version:"
+                  tiup --version || echo "tiup not working"
+                  sudo -u transaction bash -c './run.sh'
+              }
+
+              set -x
+              install-commons
+              install-jsonnet
+              install-yq
+              user-wait-creation
+              user-install-app-key
+              user-install-auth-key
+              user-install-tiup
+              run-gctest
+      networkInterfaces:
+        - accessConfigs:
+            - name: External NAT
+              type: ONE_TO_ONE_NAT
+          network: https://www.googleapis.com/compute/v1/projects/gcp-tikv-transaction-dev/global/networks/default
+      serviceAccounts:
+        - email: benchmark@gcp-tikv-transaction-dev.iam.gserviceaccount.com
+          scopes:
+            - https://www.googleapis.com/auth/cloud-platform
+      zone: us-east4-c
+    type: compute.v1.instance
+
