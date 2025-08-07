@@ -4,13 +4,14 @@ import (
 	"database/sql"
 	"encoding/json"
 	"fmt"
-	_ "github.com/go-sql-driver/mysql"
+	"io"
 	"net/http"
 	"strconv"
 	"testing"
 	"time"
 
-	httputil "github.com/pingcap/test-infra/sdk/pkg/util/http"
+	_ "github.com/go-sql-driver/mysql"
+	"github.com/pingcap/errors"
 	"github.com/stretchr/testify/require"
 )
 
@@ -71,8 +72,8 @@ func TestAll(t *testing.T) {
 		}
 	}()
 
-	cli := httputil.NewHTTPClient(http.DefaultClient)
-	initState, err := getGCState(cli, statusURL)
+	cli := newHTTPClient(statusURL)
+	initState, err := cli.getGCState()
 	require.NoError(t, err)
 
 	var gcRunned bool
@@ -80,7 +81,7 @@ func TestAll(t *testing.T) {
 	for {
 		select {
 		case <-ticker.C:
-			state, err := getGCState(cli, statusURL)
+			state, err := cli.getGCState()
 			require.NoError(t, err)
 			require.True(t, state.TxnSafePoint <= txnTS)
 			if state.TxnSafePoint != initState.TxnSafePoint {
@@ -94,14 +95,63 @@ func TestAll(t *testing.T) {
 	}
 }
 
-func getGCState(cli *httputil.Client, addr string) (GCState, error) {
+type Client struct {
+	*http.Client
+	url string
+}
+
+func newHTTPClient(statusURL string) *Client {
+	return &Client{
+		Client: http.DefaultClient,
+		url:    statusURL,
+	}
+}
+
+func (c *Client) getGCState() (GCState, error) {
 	var state GCState
-	data, err := cli.Get(fmt.Sprintf("%s/txn-gc-states", addr))
+	data, err := c.Get(fmt.Sprintf("%s/txn-gc-states", c.url))
 	if err != nil {
 		return state, err
 	}
 	err = json.Unmarshal(data, &state)
 	return state, err
+}
+
+// Get sends a HTTP GET request to the specified URL.
+func (c *Client) Get(url string) ([]byte, error) {
+	resp, err := c.httpRequest(url, http.MethodGet, "", nil)
+	if err != nil {
+		return nil, err
+	}
+	defer resp.Body.Close()
+
+	res, err := io.ReadAll(resp.Body)
+	if err != nil {
+		return nil, errors.Wrap(err, "Read GET response failed")
+	}
+	if !isHTTPSuccess(resp.StatusCode) {
+		return nil, errors.New(fmt.Sprintf("GET request \"%s\", got %v %s", url, resp.StatusCode, string(res)))
+	}
+	return res, nil
+}
+
+func isHTTPSuccess(statusCode int) bool {
+	return statusCode >= 200 && statusCode < 300
+}
+
+func (c *Client) httpRequest(url string, method string, bodyType string, body io.Reader) (*http.Response, error) {
+	req, err := http.NewRequest(method, url, body)
+	if err != nil {
+		return nil, errors.Wrap(err, "HTTP request failed")
+	}
+	if bodyType != "" {
+		req.Header.Set("Content-Type", bodyType)
+	}
+	resp, err := c.Do(req)
+	if err != nil {
+		return nil, errors.Annotate(err, fmt.Sprintf("do http request failed, [%s] %s", method, url))
+	}
+	return resp, nil
 }
 
 type GCBarrier struct {
