@@ -28,7 +28,9 @@ for i in $(seq 0 $((N-1))); do
   peer_port=$((2380 + i * 2))
   client_port=$((2379 + i * 2))
   data_dir=./data/${name}
+  log_dir=./log/${name}
   mkdir -p "$data_dir"
+  mkdir -p "$log_dir"
 
   echo "Starting $name..."
 
@@ -41,7 +43,7 @@ for i in $(seq 0 $((N-1))); do
     --advertise-client-urls=http://127.0.0.1:${client_port} \
     --advertise-peer-urls=http://127.0.0.1:${peer_port} \
     --initial-cluster=${CLUSTER} \
-    --log-file=${data_dir}/pd.log > ${data_dir}/stdout.log 2>&1 &
+    --log-file=${log_dir}/pd.log > ${log_dir}/stdout.log 2>&1 &
   
   echo $! > ${data_dir}/pd.pid
 done
