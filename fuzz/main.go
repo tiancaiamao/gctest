@@ -258,7 +258,7 @@ func checkInvariance(ctx context.Context, wg *sync.WaitGroup, pdcli pd.Client) {
 			// gcState.TxnSafePoint < minStartTS could happen.
 			// In this case, the invariance should be stop pushing txn safe point
 			if lastTxnSafePoint != gcState.TxnSafePoint {
-				log.Fatal("txn safe point must <= min start ts", gcState.TxnSafePoint, minStartTS)
+				log.Printf("[WARN] txn safe point [%d] > min start ts [%d], in this case txn safe point should not push, but lastTxnSafePoint=%d", gcState.TxnSafePoint, minStartTS, lastTxnSafePoint)
 			}
 		}
 

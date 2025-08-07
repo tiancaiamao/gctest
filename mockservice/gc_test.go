@@ -19,20 +19,25 @@ import (
 	"strings"
 	"testing"
 	"time"
+	"fmt"
 
-	"github.com/pingcap/tidb/pkg/kv"
-	"github.com/pingcap/tidb/tests/realtikvtest"
-	"github.com/stretchr/testify/require"
 	"github.com/tikv/client-go/v2/oracle"
+	pd "github.com/tikv/pd/client"
+	"github.com/tikv/pd/client/pkg/caller"
+	"github.com/stretchr/testify/require"
 )
 
-func TestMockExternalServicesCall(t *testing.T) {
-	store := realtikvtest.CreateMockStoreAndSetup(t)
+func main() {
+	t := &testing.T{}
+	pdcli, err := pd.NewClient(caller.Component("test"),
+		[]string{"127.0.0.1:2379"}, pd.SecurityOption{})
+	if err != nil {
+		fmt.Println("open pd client fail??", err)
+		return
+	}
+	defer pdcli.Close()
 
-	pdStore := store.(kv.StorageWithPD)
-	keyspaceID := store.GetCodec().GetKeyspaceID()
-	pdcli := pdStore.GetPDClient()
-
+	const keyspaceID = 1
 	gccli := pdcli.GetGCStatesClient(uint32(keyspaceID))
 	state, err := gccli.GetGCState(context.Background())
 	require.NoError(t, err)
