@@ -11,10 +11,10 @@ advertise-address = ""
 port = 4000
 
 # Registered store name, [tikv, mocktikv, unistore]
-store = "unistore"
+store = "tikv"
 
 # TiDB storage path.
-path = "/tmp/tidb"
+path = "pd:2379"
 
 # The socket file to use for connection.
 socket = "/tmp/tidb-{Port}.sock"

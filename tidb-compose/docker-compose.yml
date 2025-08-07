@@ -33,11 +33,13 @@ services:
       - --pd=pd:2379
       - --data-dir=/data/tikv
       - --config=/tikv.toml
+      - --addr=0.0.0.0:20160
+      - --advertise-addr=tikv:20160
     networks:
       - tidb-net
 
   tidb:
-    image: pingcap/tidb:latest
+    image: us-docker.pkg.dev/pingcap-testing-account/hub/pingcap/tidb/images/tidb-server:master-next-gen_linux_amd64
     container_name: tidb
     depends_on:
       - pd
