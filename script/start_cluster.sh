@@ -16,9 +16,22 @@ docker pull us-docker.pkg.dev/pingcap-testing-account/hub/pingcap/tidb/images/ti
 mkdir -p "$BIN_DIR"
 
 echo "Extracting binaries..."
-docker run --rm -v "$BIN_DIR":/pd-bin --entrypoint /bin/sh us-docker.pkg.dev/pingcap-testing-account/hub/tikv/pd/image:master-next-gen_linux_amd64 -c 'cp /pd-server /pd-bin/pd-server'
-docker run --rm -v "$BIN_DIR":/tikv-bin --entrypoint /bin/sh us-docker.pkg.dev/pingcap-testing-account/hub/tikv/tikv/image:release-nextgen-20250815-67eb240-next-gen_linux_amd64 -c 'cp /tikv-server /tikv-bin/tikv-server'
-docker run --rm -v "$BIN_DIR":/tidb-bin --entrypoint /bin/sh us-docker.pkg.dev/pingcap-testing-account/hub/pingcap/tidb/images/tidb-server:master-327a22d-next-gen_linux_amd64 -c 'cp /tidb-server /tidb-bin/tidb-server'
+CID=$(docker create us-docker.pkg.dev/pingcap-testing-account/hub/tikv/pd/image:master-next-gen_linux_amd64)
+docker cp "$CID:/pd-server" ./bin/pd-server
+docker rm "$CID"
+
+CID=$(docker create us-docker.pkg.dev/pingcap-testing-account/hub/tikv/tikv/image:release-nextgen-20250815-67eb240-next-gen_linux_amd64)
+docker cp "$CID:/tikv-server" ./bin/tikv-server
+docker rm "$CID"
+
+CID=$(docker create us-docker.pkg.dev/pingcap-testing-account/hub/pingcap/tidb/images/tidb-server:master-327a22d-next-gen_linux_amd64)
+docker cp "$CID:/tidb-server" ./bin/tidb-server
+docker rm "$CID"
+
+
+# docker run --rm -v "$BIN_DIR":/pd-bin --entrypoint /bin/sh us-docker.pkg.dev/pingcap-testing-account/hub/tikv/pd/image:master-next-gen_linux_amd64 -c 'cp /pd-server /pd-bin/pd-server'
+# docker run --rm -v "$BIN_DIR":/tikv-bin --entrypoint /bin/sh us-docker.pkg.dev/pingcap-testing-account/hub/tikv/tikv/image:release-nextgen-20250815-67eb240-next-gen_linux_amd64 -c 'cp /tikv-server /tikv-bin/tikv-server'
+# docker run --rm -v "$BIN_DIR":/tidb-bin --entrypoint /bin/sh us-docker.pkg.dev/pingcap-testing-account/hub/pingcap/tidb/images/tidb-server:master-327a22d-next-gen_linux_amd64 -c 'cp /tidb-server /tidb-bin/tidb-server'
 
 # Start TiUP playground
 echo "Starting TiUP playground with PD count = $PD_COUNT..."
