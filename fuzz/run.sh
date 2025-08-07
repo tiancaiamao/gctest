@@ -11,12 +11,12 @@ docker run --rm -v $(pwd)/bin:/pd-bin --entrypoint /bin/sh us-docker.pkg.dev/pin
 
 # start pd server
 N=3
+BASE_PORT=2379
 CLUSTER=""
 for i in $(seq 0 $((N-1))); do
   name=pd-${i}
-  port1=$((2380 + i * 2))
-  port2=$((2379 + i * 2))
-  CLUSTER+="${name}=http://127.0.0.1:${port1},"
+  peer_port=$((2380 + i * 2))
+  CLUSTER+="${name}=http://127.0.0.1:${peer_port},"
 done
 CLUSTER=${CLUSTER%,}  # remove trailing comma
 
@@ -28,7 +28,7 @@ for i in $(seq 0 $((N-1))); do
   peer_port=$((2380 + i * 2))
   client_port=$((2379 + i * 2))
   data_dir=./data/${name}
-  mkdir -p $data_dir
+  mkdir -p "$data_dir"
 
   echo "Starting $name..."
 
@@ -42,6 +42,8 @@ for i in $(seq 0 $((N-1))); do
     --advertise-peer-urls=http://127.0.0.1:${peer_port} \
     --initial-cluster=${CLUSTER} \
     --log-file=${data_dir}/pd.log > ${data_dir}/stdout.log 2>&1 &
+  
+  echo $! > ${data_dir}/pd.pid
 done
 
 # wait pd server online?
@@ -53,3 +55,5 @@ echo "PD cluster is online!"
 
 # run test
 go run main.go
+
+./stop_pd_cluster.sh
