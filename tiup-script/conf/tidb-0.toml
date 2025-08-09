@@ -1,0 +1,153 @@
+advertise-address = ""
+alter-primary-key = false
+autoscaler-addr = "tiflash-autoscale-lb.tiflash-autoscale.svc.cluster.local:8081"
+autoscaler-cluster-id = ""
+autoscaler-type = "aws"
+compatible-kill-query = false
+delay-clean-table-lock = 0
+deprecate-integer-display-length = true
+disaggregated-tiflash = false
+enable-enum-length-limit = true
+enable-global-kill = true
+enable-table-lock = false
+enable-telemetry = false
+graceful-wait-before-shutdown = 0
+host = "0.0.0.0"
+in-mem-slow-query-recent-num = 500
+in-mem-slow-query-topn-num = 30
+index-limit = 64
+keyspace-name = "SYSTEM"
+lease = "45s"
+max-index-length = 3072
+new_collations_enabled_on_first_bootstrap = true
+path = "127.0.0.1:2379"
+port = 4000
+repair-mode = false
+server-version = ""
+skip-register-to-dashboard = false
+socket = "/tmp/tidb-{Port}.sock"
+split-region-max-num = 1000
+split-table = true
+store = "tikv"
+temp-dir = "/tmp/tidb"
+tmp-storage-quota = -1
+token-limit = 1000
+treat-old-version-utf8-as-utf8mb4 = true
+use-autoscaler = false
+
+[experimental]
+allow-expression-index = false
+
+[instance]
+ddl_slow_threshold = 300
+max_connections = 0
+tidb_check_mb4_value_in_utf8 = true
+tidb_enable_ddl = true
+tidb_enable_slow_log = true
+tidb_expensive_query_time_threshold = 60
+tidb_force_priority = "NO_PRIORITY"
+tidb_general_log = false
+tidb_pprof_sql_cpu = false
+tidb_record_plan_in_slow_log = 1
+tidb_slow_log_threshold = 300
+
+[isolation-read]
+engines = ["tikv", "tiflash", "tidb"]
+
+[log]
+format = "text"
+general-log-file = ""
+level = "info"
+slow-query-file = "tidb-slow.log"
+[log.file]
+compression = ""
+filename = ""
+max-backups = 0
+max-days = 0
+max-size = 300
+
+[opentracing]
+enable = false
+rpc-metrics = false
+[opentracing.reporter]
+buffer-flush-interval = 0
+local-agent-host-port = ""
+log-spans = false
+queue-size = 0
+[opentracing.sampler]
+max-operations = 0
+param = 1.0
+sampling-refresh-interval = 0
+sampling-server-url = ""
+type = "const"
+
+[pd-client]
+pd-server-timeout = 3
+
+[performance]
+bind-info-lease = "3s"
+cross-join = true
+distinct-agg-push-down = false
+force-init-stats = true
+gogc = 100
+lite-init-stats = true
+max-procs = 0
+max-txn-ttl = 3600000
+pseudo-estimate-ratio = 0.8
+server-memory-quota = 0
+stats-lease = "3s"
+stmt-count-limit = 5000
+tcp-keep-alive = true
+tcp-no-delay = true
+txn-entry-size-limit = 6291456
+txn-total-size-limit = 104857600
+
+[pessimistic-txn]
+deadlock-history-capacity = 10
+deadlock-history-collect-retryable = false
+max-retry-count = 256
+pessimistic-auto-commit = false
+
+[proxy-protocol]
+header-timeout = 5
+networks = ""
+
+[security]
+auto-tls = true
+cluster-ssl-ca = ""
+cluster-ssl-cert = ""
+cluster-ssl-key = ""
+enable-sem = false
+rsa-key-size = 4096
+spilled-file-encryption-method = "plaintext"
+ssl-ca = ""
+ssl-cert = ""
+ssl-key = ""
+tls-version = ""
+
+[status]
+metrics-addr = ""
+metrics-interval = 15
+record-db-label = false
+record-db-qps = false
+report-status = true
+status-host = "0.0.0.0"
+status-port = 10080
+
+[tikv-client]
+batch-wait-size = 8
+commit-timeout = "41s"
+grpc-compression-type = "none"
+grpc-connection-count = 4
+grpc-keepalive-time = 10
+grpc-keepalive-timeout = 3
+max-batch-size = 128
+max-batch-wait-time = 0
+overload-threshold = 200
+region-cache-ttl = 600
+resolve-lock-lite-threshold = 16
+store-limit = 0
+store-liveness-timeout = "1s"
+ttl-refreshed-txn-size = 33554432
+[tikv-client.copr-cache]
+capacity-mb = 1000.0

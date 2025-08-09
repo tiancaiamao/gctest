@@ -1,0 +1,11 @@
+[raftdb]
+max-open-files = 256
+
+[rocksdb]
+max-open-files = 256
+
+[storage]
+api-version = 2
+enable-ttl = true
+reserve-raft-space = 0
+reserve-space = 0
