@@ -75,14 +75,8 @@ resources:
               function run-gctest() {
                   sudo -u transaction bash -c 'git clone https://github.com/tiancaiamao/gctest.git /home/transaction/gctest'
                   cd /home/transaction/gctest
-                  source ~/.bash_profile
-                  echo "====[ Debug TiUP ]===="
-                  echo "PATH=$PATH"
-                  echo "Whoami: $(whoami)"
-                  echo "TiUP path: $(which tiup || echo 'tiup not found')"
-                  echo "TiUP version:"
-                  tiup --version || echo "tiup not working"
-                  sudo -u transaction bash -c './run_all.sh'
+                  setenforce 0
+                  ./run_all.sh
               }
 
               set -x
