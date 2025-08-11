@@ -4,21 +4,26 @@ set -e
 echo "fetch binary first..."
 ./script/fetch_binary.sh
 
-declare -A tasks=(
-    ["longtxn"]="./longtxn/run.sh"
-    ["isolation"]="./isolation/run.sh"
-    ["fuzz"]="./fuzz/run.sh"
-    # ["compatibility"]="./compatibility/run.sh"
-    # ["mockservice"]="./mockservice/run.sh"
-)
+declare -A task_dirs
+task_dirs["longtxn"]="longtxn"
+task_dirs["isolation"]="isolation"
+task_dirs["fuzz"]="fuzz"
 declare -A pid_to_name
 
 echo "now run tests"
-for name in "${!tasks[@]}"; do
-    "${tasks[$name]}" &
+for name in "${!task_dirs[@]}"; do
+    dir="${task_dirs[$name]}"
+    if [[ -z "$dir" ]]; then
+        echo "Error: No directory configured for task '$name'"
+        exit 1
+    fi
+    (
+        cd "$dir" || exit 1
+        ./run.sh > run.log
+    ) &
     pid=$!
     pid_to_name[$pid]="$name"
-    echo "Started task '$name' (PID=$pid)"
+    echo "Started task '$name' in $dir (PID=$pid)"
 done
 
 echo "wait test to finish"

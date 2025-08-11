@@ -11,7 +11,7 @@ go test -c
 mv isolation.test ../script/bin/isolation.test
 
 # start to run test in docker
-docker run --rm -it \
+docker run --rm -i \
        -v "$CURR_DIR/docker/script":/root/script \
        -v "$CURR_DIR/../script/bin":/root/bin \
        -v "$CURR_DIR/docker/conf":/root/conf \

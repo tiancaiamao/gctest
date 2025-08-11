@@ -6,11 +6,11 @@ Put pd-server, tikv-server, tidb-server into the bin directory.
 
 ```
 docker run --rm -it \
-       -p 4000:4000
-       -v "$CURR_DIR/docker/script":/root/script \
-       -v "$CURR_DIR/docker/bin":/root/bin \
-       -v "$CURR_DIR/docker/conf":/root/conf \
-       -v "$CURR_DIR/docker/data":/root/data \
+       -p 4000:4000 \
+       -v "$CURR_DIR/script":/root/script \
+       -v "$CURR_DIR/bin":/root/bin \
+       -v "$CURR_DIR/conf":/root/conf \
+       -v "$CURR_DIR/data":/root/data \
        -w /root \
        --entrypoint /root/script/entry.sh \
        rockylinux:9
@@ -51,11 +51,11 @@ $ tree
 
 ```
 docker run --rm -it \
-       -p 4000:4000
-       -v "$CURR_DIR/docker/script":/root/script \
-       -v "$CURR_DIR/docker/bin":/root/bin \
-       -v "$CURR_DIR/docker/conf":/root/conf \
-       -v "$CURR_DIR/docker/data":/root/data \
+       -p 4000:4000 \
+       -v "$CURR_DIR/script":/root/script \
+       -v "$CURR_DIR/bin":/root/bin \
+       -v "$CURR_DIR/conf":/root/conf \
+       -v "$CURR_DIR/data":/root/data \
        -w /root \
        rockylinux:9 bash
 	   

@@ -15,7 +15,7 @@ resources:
             value: |
               function install-commons() {
                   dnf install -y --setopt=install_weak_deps=false epel-release
-                  dnf install -y --setopt=install_weak_deps=false git tig lnav tmux rsync numactl mysql bash-completion nc docker golang
+                  dnf install -y --setopt=install_weak_deps=false git tig lnav tmux rsync numactl mysql bash-completion docker golang
               }
 
               function install-sysbench() {
@@ -82,17 +82,16 @@ resources:
                   echo "TiUP path: $(which tiup || echo 'tiup not found')"
                   echo "TiUP version:"
                   tiup --version || echo "tiup not working"
-                  sudo -u transaction bash -c './run.sh'
+                  sudo -u transaction bash -c './run_all.sh'
               }
 
               set -x
               install-commons
-              install-jsonnet
-              install-yq
+              # install-jsonnet
+              # install-yq
               user-wait-creation
               user-install-app-key
               user-install-auth-key
-              user-install-tiup
               run-gctest
       networkInterfaces:
         - accessConfigs:
