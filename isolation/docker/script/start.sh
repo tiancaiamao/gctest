@@ -5,6 +5,8 @@ BIN_DIR=/root/bin
 DATA_DIR=/root/data
 CONF_DIR=/root/conf
 
+rm -rf $DATA_DIR/*
+
 mkdir -p $DATA_DIR/pd-0
 $BIN_DIR/pd-server --name=pd-0 --config=$CONF_DIR/pd-0.toml --data-dir=$DATA_DIR/pd-0/data --peer-urls=http://127.0.0.1:2380 --advertise-peer-urls=http://127.0.0.1:2380 --client-urls=http://127.0.0.1:2379 --advertise-client-urls=http://127.0.0.1:2379 --log-file=$DATA_DIR/pd-0/pd.log --initial-cluster=pd-0=http://127.0.0.1:2380 > $DATA_DIR/pd-0/pd_stderr 2>&1 &
 

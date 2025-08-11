@@ -1,3 +1,7 @@
-*~pd-0/
+pd-0/
 tidb-0/
 tikv-0/
+script/bin
+script/data
+*.log
+*~
