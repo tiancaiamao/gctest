@@ -13,7 +13,7 @@ import (
 )
 
 func updateServiceGCSafePoint(serviceName string, barrierTS uint64) error {
-	cmd := exec.Command("go", "run", "oldAPI/main.go", serviceName, strconv.FormatUint(barrierTS, 10))
+	cmd := exec.Command("/root/bin/oldAPI", serviceName, strconv.FormatUint(barrierTS, 10))
 	output, err := cmd.Output()
 	fmt.Println("====")
 	os.Stdout.Write(output)

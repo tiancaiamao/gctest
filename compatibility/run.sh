@@ -1,9 +1,19 @@
 #!/usr/bin/env bash
 set -e
+CURR_DIR="$(cd "$(dirname "$0")" && pwd)"
 
-../script/start_cluster.sh
+# tidb/tikv/pd binaries should have been ready before call this script
 
-# run test
-go run main.go
+# prepare test binary
+go build -o ../script/bin/oldAPI
+go build -o ../script/bin/compatibility.test
 
-../script/stop_cluster.sh
+# start to run test in docker
+docker run --rm -it \
+       -v "$CURR_DIR/docker/script":/root/script \
+       -v "$CURR_DIR/../script/bin":/root/bin \
+       -v "$CURR_DIR/docker/conf":/root/conf \
+       -v "$CURR_DIR/docker/data":/root/data \
+       -w /root \
+       --entrypoint /root/script/entry.sh \
+       rockylinux:9

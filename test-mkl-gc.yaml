@@ -74,7 +74,7 @@ resources:
 
               function run-gctest() {
                   sudo -u transaction bash -c 'git clone https://github.com/tiancaiamao/gctest.git /home/transaction/gctest'
-                  cd /home/transaction/gctest/isolation
+                  cd /home/transaction/gctest
                   source ~/.bash_profile
                   echo "====[ Debug TiUP ]===="
                   echo "PATH=$PATH"

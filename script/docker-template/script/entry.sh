@@ -6,5 +6,3 @@ set -e
 # start the cluster first
 /root/script/start.sh
 
-# change it to something else
-/root/bin/fuzz.test > /root/data/fuzz.test.log

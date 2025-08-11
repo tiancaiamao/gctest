@@ -1,19 +1,21 @@
 #!/usr/bin/env bash
 set -e
 
-../script/start_cluster.sh
 
-../script/bin/tidb-server -config conf/tidb1.toml > tidb1.log &
-../script/bin/tidb-server -config conf/tidb2.toml > tidb2.log &
-../script/bin/tidb-server -config conf/tidb3.toml > tidb3.log &
-../script/bin/tidb-server -config conf/tidb4.toml > tidb4.log &
-../script/bin/tidb-server -config conf/tidb5.toml > tidb5.log &
-../script/bin/tidb-server -config conf/tidb6.toml > tidb6.log &
+CURR_DIR="$(cd "$(dirname "$0")" && pwd)"
 
-sleep 3
+# tidb/tikv/pd binaries should have been ready before call this script
 
-# run test
-go test -v -timeout 0 ./...
+# prepare test binary
+go test -c
+mv isolation.test ../script/bin/isolation.test
 
-pkill -9 -f tidb-server
-../script/stop_cluster.sh
+# start to run test in docker
+docker run --rm -it \
+       -v "$CURR_DIR/docker/script":/root/script \
+       -v "$CURR_DIR/../script/bin":/root/bin \
+       -v "$CURR_DIR/docker/conf":/root/conf \
+       -v "$CURR_DIR/docker/data":/root/data \
+       -w /root \
+       --entrypoint /root/script/entry.sh \
+       rockylinux:9

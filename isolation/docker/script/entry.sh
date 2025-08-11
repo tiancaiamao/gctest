@@ -6,5 +6,5 @@ set -e
 # start the cluster first
 /root/script/start.sh
 
-# change it to something else
-/root/bin/fuzz.test > /root/data/fuzz.test.log
+# run test
+/root/bin/isolation.test -test.timeout 0 > /root/data/isolation.test.log

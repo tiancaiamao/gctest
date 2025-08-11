@@ -10,7 +10,6 @@ go build -o ../script/bin/fuzz.test
 
 # start to run test in docker
 docker run --rm -it \
-       -p 4000:4000 \
        -v "$CURR_DIR/docker/script":/root/script \
        -v "$CURR_DIR/../script/bin":/root/bin \
        -v "$CURR_DIR/docker/conf":/root/conf \
