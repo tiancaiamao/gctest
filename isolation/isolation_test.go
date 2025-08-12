@@ -1,20 +1,20 @@
 package isolation
 
 import (
-	"testing"
 	"bytes"
-	"strings"
 	"database/sql"
 	"fmt"
+	"strings"
+	"testing"
 	"time"
 
-	"github.com/stretchr/testify/require"
 	_ "github.com/go-sql-driver/mysql"
+	"github.com/stretchr/testify/require"
 )
 
 type ksAndAddr struct {
 	keyspace string
-	addr string
+	addr     string
 }
 
 var config []ksAndAddr
@@ -38,7 +38,7 @@ func TestAll(t *testing.T) {
 		dbs = append(dbs, db)
 	}
 
-	_, err := dbs[1].Exec("set @@global.tidb_gc_run_interval = 17m")
+	_, err := dbs[1].Exec("set @@global.tidb_gc_run_interval = 15m")
 	require.NoError(t, err)
 	dbs[2].Exec("set @@global.tidb_gc_run_interval = 30m")
 	require.NoError(t, err)
@@ -80,7 +80,7 @@ func TestAll(t *testing.T) {
 		gcLifeTimes = append(gcLifeTimes, values[0])
 	}
 	require.Equal(t, "10m0s", gcLifeTimes[0])
-	require.Equal(t, "17m0s", gcLifeTimes[1])
+	require.Equal(t, "15m0s", gcLifeTimes[1])
 	require.Equal(t, "30m0s", gcLifeTimes[2])
 
 	for _, db := range dbs {
@@ -93,34 +93,40 @@ func TestAll(t *testing.T) {
 		_, err = db.Exec("insert into test.t values (1, 10), (2, 20), (3, 30);")
 		require.NoError(t, err)
 	}
+	time.Sleep(3 * time.Second)
+	staleTS := time.Now().Format("2006-01-02 15:04:05")
+	sql := fmt.Sprintf("select * from test.t as of timestamp %q", staleTS)
 
 	// 5min later
 	time.Sleep(5 * time.Minute)
 	fmt.Println("check data visibility after 5min")
-
 	for _, db := range dbs {
-		mustQuery(t, db, "select * from test.t").Check(Rows("1 10", "2 20", "3 30"))
+		mustQuery(t, db, sql).Check(Rows("1 10", "2 20", "3 30"))
 	}
 
-	// 15min later
+	// 17min later
 	time.Sleep(10 * time.Minute)
 	fmt.Println("check data visibility after 15min")
-
 	for _, db := range dbs[1:] {
-		mustQuery(t, db, "select * from test.t").Check(Rows("1 10", "2 20", "3 30"))
+		mustQuery(t, db, sql).Check(Rows("1 10", "2 20", "3 30"))
 	}
-	_, err = dbs[0].Query("select * from test.t")
-	require.Error(t, err)
+	rows, err := dbs[0].Query(sql)
+	if err == nil {
+		_, err := rowsToResult(t, rows)
+		require.Error(t, err)
+	}
 
 	// 25min later
 	time.Sleep(10 * time.Minute)
 	fmt.Println("check data visibility after 25min")
-
-	for _, db := range dbs[0:2] {
-		_, err = db.Query("select * from test.t")
-		require.Error(t, err)
+	mustQuery(t, dbs[2], sql).Check(Rows("1 10", "2 20", "3 30"))
+	for _, db := range dbs[:2] {
+		rows, err = db.Query(sql)
+		if err == nil {
+			_, err := rowsToResult(t, rows)
+			require.Error(t, err)
+		}
 	}
-	mustQuery(t, dbs[2], "select * from test.t").Check(Rows("1 10", "2 20", "3 30"))
 
 	fmt.Println("test succeed")
 }
@@ -129,28 +135,40 @@ func mustQuery(t *testing.T, db *sql.DB, sql string) *Result {
 	rows, err := db.Query(sql)
 	require.NoError(t, err)
 
-	columns, err := rows.Columns()
+	res, err := rowsToResult(t, rows)
 	require.NoError(t, err)
+	return res
+}
+
+func rowsToResult(t *testing.T, rows *sql.Rows) (*Result, error) {
+	columns, err := rows.Columns()
+	if err != nil {
+		return nil, err
+	}
 
 	var res [][]string
 	for rows.Next() {
 		oneRow := make([]string, len(columns))
 		args := make([]any, len(columns))
-		for i:=0; i<len(columns); i++ {
+		for i := 0; i < len(columns); i++ {
 			args[i] = &oneRow[i]
 		}
 		err = rows.Scan(args...)
-		require.NoError(t, err)
+		if err != nil {
+			return nil, err
+		}
 
 		res = append(res, oneRow)
 	}
-	require.NoError(t, rows.Close())
-	return &Result{
-		rows: res,
-		require: require.New(t),
+	err = rows.Close()
+	if err != nil {
+		return nil, err
 	}
+	return &Result{
+		rows:    res,
+		require: require.New(t),
+	}, nil
 }
-
 
 // Result is the result returned by MustQuery.
 type Result struct {
