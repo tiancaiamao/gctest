@@ -76,7 +76,7 @@ resources:
                   sudo -u transaction bash -c 'git clone https://github.com/tiancaiamao/gctest.git /home/transaction/gctest'
                   cd /home/transaction/gctest
                   setenforce 0
-                  ./run_all.sh
+                  sudo -u transaction bash -c './run_all.sh'
               }
 
               set -x
