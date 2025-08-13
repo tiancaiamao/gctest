@@ -8,6 +8,8 @@ declare -A task_dirs
 task_dirs["longtxn"]="longtxn"
 task_dirs["isolation"]="isolation"
 task_dirs["fuzz"]="fuzz"
+task_dirs["mockservice"]="mockservice"
+task_dirs["compatibility"]="compatibility"
 declare -A pid_to_name
 
 echo "now run tests"

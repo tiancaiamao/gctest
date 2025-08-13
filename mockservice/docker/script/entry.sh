@@ -6,4 +6,5 @@ set -e
 # start the cluster first
 /root/script/start.sh
 
-/root/bin/compatibility.test > /root/data/compatibility.test.log
+# change it to something else
+/root/bin/mockservice.test > /root/data/mockservice.test.log

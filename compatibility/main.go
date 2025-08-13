@@ -13,9 +13,11 @@ import (
 )
 
 func updateServiceGCSafePoint(serviceName string, barrierTS uint64) error {
+	// cmd := exec.Command("go", "run", "./oldAPI/main.go", serviceName, strconv.FormatUint(barrierTS, 10))
 	cmd := exec.Command("/root/bin/oldAPI", serviceName, strconv.FormatUint(barrierTS, 10))
+	fmt.Printf("before call ==== update service gc safe point called %s %d===\n", serviceName, barrierTS)
 	output, err := cmd.Output()
-	fmt.Println("====")
+	fmt.Printf("after call ==== update service gc safe point called %s %d===\n", serviceName, barrierTS)
 	os.Stdout.Write(output)
 	return err
 }
@@ -49,32 +51,35 @@ func main() {
 	if err != nil {
 		panic(err)
 	}
-	fmt.Println("====", len(state.GCBarriers))
+	fmt.Println("len(barriers) ==", len(state.GCBarriers))
+	found := false
 	for _, barrier := range state.GCBarriers {
-		fmt.Println("barrier ===", barrier.BarrierID, barrier.BarrierTS)
-		// if barrier.BarrierID == serviceName {
-		// 	if barrier.BarrierTS != 666 {
-		// 		panic("barrier ts incorrect for UpdateServiceGCSafePoint")
-		// 	}
-		// 	found = true
-		// 	break
-		// }
+		// fmt.Println("barrier ===", barrier.BarrierID, barrier.BarrierTS)
+		if barrier.BarrierID == serviceName {
+			if barrier.BarrierTS != 666 {
+				panic("barrier ts incorrect for UpdateServiceGCSafePoint")
+			}
+			found = true
+			break
+		}
+	}
+	if !found {
+		panic("barrer set using UpdateServiceGCSafePoint but gone?")
 	}
 
 	// Check gc safe point is blocked by the old UpdateServiceGCSafePoint API
-
 	result2, err := cli.AdvanceTxnSafePoint(context.Background(), 777)
-	// if err != nil {
-	// 	panic(err)
-	// }
-	// if result2.NewTxnSafePoint != 666 {
+	if err != nil {
+		panic(err)
+	}
+	if result2.NewTxnSafePoint != 666 {
 		fmt.Println("111 advance gc safe point result ==", result2)
-		// panic("111 advance txn safe point should be pushed")
-	// }
+		panic("111 advance txn safe point should be pushed")
+	}
 
 	result1, err := cli.AdvanceGCSafePoint(context.Background(), 777)
 	if err != nil {
-		fmt.Println("000 advance gc safe point", result1)
+		fmt.Println("000 advance gc safe point", result1, err)
 		// panic(err)
 		// "[PD:gc:ErrGCSafePointExceedsTxnSafePoint]trying to update GC safe point to a too large value
 	}
@@ -84,22 +89,22 @@ func main() {
 	err = updateServiceGCSafePoint(serviceName, 999)
 	if err != nil {
 		fmt.Println(err)
+		panic("error")
 	}
-	// Check gc safe point is blocked by the old UpdateServiceGCSafePoint API
 	result2, err = cli.AdvanceTxnSafePoint(context.Background(), 777)
 	if err != nil {
 		panic(err)
 	}
-	// if result2.NewGCSafePoint != 667 {
+	if result2.NewTxnSafePoint != 777 {
 		fmt.Println("333 advance txn safe point result ==", result2)
-		// panic("222 advance txn safe point should be pushed")
-	// }
+		panic("advance txn safe point should be pushed")
+	}
 
 	result3, err := cli.AdvanceGCSafePoint(context.Background(), 777)
-	// if result2.NewGCSafePoint != 667 {
+	if result3.NewGCSafePoint != 777 {
 		fmt.Println("444 advance gc safe point result ==", result3)
-		// panic("222 advance txn safe point should be pushed")
-	// }
+		panic("advance gc safe point should be pushed")
+	}
 
 	// ========================
 	// Test special behavior, UpdateServiceGCSafePoint(gc_worker) should be equal to advance txn safe point
@@ -110,6 +115,7 @@ func main() {
 		if raw, ok := err.(*exec.ExitError); ok {
 			fmt.Println("lalala", string(raw.Stderr))
 		}
+		panic("updateServiceGCSafePoint for gc_worker error")
 	}
 	state, err = cli1.GetGCState(context.Background())
 	if err != nil {

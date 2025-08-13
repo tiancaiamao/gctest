@@ -16,7 +16,6 @@ import (
 	"github.com/tikv/pd/client"
 )
 
-
 func main() {
 	serviceName := os.Args[1]
 	barrierTS, err := strconv.ParseUint(os.Args[2], 10, 64)
@@ -29,14 +28,20 @@ func main() {
 		[]string{"127.0.0.1:2379"}, pd.SecurityOption{})
 	if err != nil {
 		fmt.Fprintln(os.Stderr, "open pd client fail??", err)
+		fmt.Println("what the fuck??111")
 		os.Exit(-1)
+		return
 	}
 	defer pdcli.Close()
 
+	fmt.Println("before api call?")
 	txnSafePoint, err := pdcli.UpdateServiceGCSafePoint(context.Background(), serviceName, math.MaxInt64, barrierTS)
 	if err != nil {
 		fmt.Fprintln(os.Stderr, err)
+		fmt.Println("what the fuck??")
 		os.Exit(-1)
+		return
 	}
 	fmt.Println("txn safe point == ", txnSafePoint)
+	return
 }

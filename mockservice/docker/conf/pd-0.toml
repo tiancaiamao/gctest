@@ -1,0 +1,5 @@
+[keyspace]
+pre-alloc = ["admin", "user1", "user2"]
+
+[schedule]
+patrol-region-interval = "100ms"

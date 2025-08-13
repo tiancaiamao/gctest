@@ -12,7 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package gctest
+package main
 
 import (
 	"context"
@@ -70,4 +70,6 @@ func main() {
 
 	_, err = gccli.DeleteGCBarrier(context.Background(), barrierID)
 	require.NoError(t, err)
+
+	fmt.Println("test success")
 }
