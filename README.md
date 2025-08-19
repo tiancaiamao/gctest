@@ -21,3 +21,9 @@ Destroy instances:
 ```
 gcloud deployment-manager deployments delete test-mkl-gc
 ```
+
+Check execution result:
+
+```
+gcloud compute instances get-serial-port-output test-mkl-gc
+```
